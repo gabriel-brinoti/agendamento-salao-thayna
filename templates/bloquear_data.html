@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloquear Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Bloquear Data</h1>
+
+        {% if erro %}
+            <p class="erro">{{ erro }}</p>
+        {% endif %}
+
+        <form method="POST">
+            <label>Data:</label>
+            <input type="date" name="data" required>
+
+            <label>Motivo:</label>
+            <input type="text" name="motivo" placeholder="Ex: folga, feriado, viagem">
+
+            <button type="submit">Bloquear</button>
+        </form>
+    </div>
+</body>
+</html>

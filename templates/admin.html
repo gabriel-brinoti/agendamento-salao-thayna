@@ -9,6 +9,8 @@
 <body>
     <div class="container admin-container">
         <h1>Painel de Agendamentos</h1>
+
+        <a href="{{ url_for('bloquear_data') }}" class="botao" style="margin-bottom: 15px;">Bloquear Data</a>
         <a href="{{ url_for('logout') }}" class="botao" style="background: #dc3545; margin-bottom: 20px;">Sair</a>
 
         {% if agendamentos %}
@@ -43,6 +45,35 @@
             </table>
         {% else %}
             <p>Nenhum agendamento encontrado.</p>
+        {% endif %}
+
+        <h2 style="margin-top: 40px;">Datas Bloqueadas</h2>
+
+        {% if bloqueios %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Motivo</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bloqueio in bloqueios %}
+                    <tr>
+                        <td>{{ bloqueio[0] }}</td>
+                        <td>{{ bloqueio[1] }}</td>
+                        <td>{{ bloqueio[2] if bloqueio[2] else "Sem motivo" }}</td>
+                        <td>
+                            <a href="{{ url_for('desbloquear_data', id=bloqueio[0]) }}" class="acao excluir" onclick="return confirm('Deseja desbloquear esta data?')">Desbloquear</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhuma data bloqueada.</p>
         {% endif %}
     </div>
 </body>

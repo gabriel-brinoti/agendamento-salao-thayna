@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify
+from datetime import datetime
 import sqlite3
 import urllib.parse
 import os
 from flask import jsonify
+
+LIMITE_AGENDAMENTOS_DIA = 8
 
 HORARIOS_DISPONIVEIS = [
     "08:00", "09:00", "10:00", "11:00",
@@ -17,6 +20,7 @@ DB_PATH = os.path.join(BASE_DIR, "database.db")
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS agendamentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,6 +31,15 @@ def init_db():
             horario TEXT NOT NULL
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS bloqueios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data TEXT NOT NULL UNIQUE,
+            motivo TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -60,8 +73,27 @@ def agendamento():
         horario = request.form["horario"]
         obs = request.form.get("obs", "")
 
+        data_obj = datetime.strptime(data, "%Y-%m-%d")
+
+        if data_obj.weekday() == 6:
+            return render_template("agendamento.html", erro="Domingo não há atendimento.")
+
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM bloqueios WHERE data = ?", (data,))
+        bloqueado = cursor.fetchone()
+
+        if bloqueado:
+            conn.close()
+            return render_template("agendamento.html", erro="Essa data está bloqueada para atendimento.")
+
+        cursor.execute("SELECT COUNT(*) FROM agendamentos WHERE data = ?", (data,))
+        total_dia = cursor.fetchone()[0]
+
+        if total_dia >= LIMITE_AGENDAMENTOS_DIA:
+            conn.close()
+            return render_template("agendamento.html", erro="Esse dia já atingiu o limite de agendamentos.")
 
         cursor.execute("""
             SELECT * FROM agendamentos
@@ -80,18 +112,17 @@ def agendamento():
         conn.commit()
         conn.close()
 
-        mensagem = f"""📅 *NOVO AGENDAMENTO*
+        mensagem = f"""*NOVO AGENDAMENTO*
 
-👤 Nome: {nome}
-📞 Telefone: {telefone}
-🩺 Serviço: {servico}
-📆 Data: {data}
-⏰ Horário: {horario}
-📝 Observação: {obs if obs else "Nenhuma"}
-"""
+        Nome: {nome}
+        Telefone: {telefone}
+        Serviço: {servico}
+        Data: {data}
+        Horário: {horario}
+        Observação: {obs if obs else "Nenhuma"}
+        """
 
-        mensagem_codificada = urllib.parse.quote(mensagem)
-
+        mensagem_codificada = urllib.parse.quote(mensagem, safe='')
         numero_whatsapp = "5516982202029"
         link_whatsapp = f"https://wa.me/{numero_whatsapp}?text={mensagem_codificada}"
 
@@ -114,9 +145,16 @@ def admin():
     """)
     agendamentos = cursor.fetchall()
 
+    cursor.execute("""
+        SELECT id, data, motivo
+        FROM bloqueios
+        ORDER BY data
+    """)
+    bloqueios = cursor.fetchall()
+
     conn.close()
 
-    return render_template("admin.html", agendamentos=agendamentos)
+    return render_template("admin.html", agendamentos=agendamentos, bloqueios=bloqueios)
 
 @app.route("/excluir/<int:id>")
 def excluir(id):
@@ -197,12 +235,36 @@ def logout():
 def horarios():
     data = request.args.get("data")
 
+    if not data:
+        return jsonify([])
+
+    data_obj = datetime.strptime(data, "%Y-%m-%d")
+
+    # Bloqueia domingos
+    if data_obj.weekday() == 6:
+        return jsonify([])
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT horario FROM agendamentos WHERE data = ?
-    """, (data,))
+    # Verifica se a data está bloqueada manualmente
+    cursor.execute("SELECT id FROM bloqueios WHERE data = ?", (data,))
+    bloqueado = cursor.fetchone()
+
+    if bloqueado:
+        conn.close()
+        return jsonify([])
+
+    # Conta quantos agendamentos já existem no dia
+    cursor.execute("SELECT COUNT(*) FROM agendamentos WHERE data = ?", (data,))
+    total_dia = cursor.fetchone()[0]
+
+    if total_dia >= LIMITE_AGENDAMENTOS_DIA:
+        conn.close()
+        return jsonify([])
+
+    # Busca horários ocupados
+    cursor.execute("SELECT horario FROM agendamentos WHERE data = ?", (data,))
     ocupados = [row[0] for row in cursor.fetchall()]
 
     conn.close()
@@ -211,6 +273,50 @@ def horarios():
 
     return jsonify(livres)
 
+@app.route("/bloquear-data", methods=["GET", "POST"])
+def bloquear_data():
+    if not session.get("admin_logado"):
+        return redirect(url_for("login"))
+
+    erro = None
+
+    if request.method == "POST":
+        data = request.form["data"]
+        motivo = request.form.get("motivo", "")
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "INSERT INTO bloqueios (data, motivo) VALUES (?, ?)",
+                (data, motivo)
+            )
+            conn.commit()
+        except sqlite3.IntegrityError:
+            erro = "Essa data já está bloqueada."
+
+        conn.close()
+
+        if not erro:
+            return redirect(url_for("admin"))
+
+    return render_template("bloquear_data.html", erro=erro)
+
+@app.route("/desbloquear-data/<int:id>")
+def desbloquear_data(id):
+    if not session.get("admin_logado"):
+        return redirect(url_for("login"))
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM bloqueios WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("admin"))
+
 if __name__ == "__main__":
     init_db()
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
