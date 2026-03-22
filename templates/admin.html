@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container admin-container">
+        <h1>Painel de Agendamentos</h1>
+        <a href="{{ url_for('logout') }}" class="botao" style="background: #dc3545; margin-bottom: 20px;">Sair</a>
+
+        {% if agendamentos %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Serviço</th>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agendamento in agendamentos %}
+                    <tr>
+                        <td>{{ agendamento[0] }}</td>
+                        <td>{{ agendamento[1] }}</td>
+                        <td>{{ agendamento[2] }}</td>
+                        <td>{{ agendamento[3] }}</td>
+                        <td>{{ agendamento[4] }}</td>
+                        <td>{{ agendamento[5] }}</td>
+                        <td>
+                            <a href="{{ url_for('editar', id=agendamento[0]) }}" class="acao editar">Editar</a>
+                            <a href="{{ url_for('excluir', id=agendamento[0]) }}" class="acao excluir" onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">Excluir</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Nenhum agendamento encontrado.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

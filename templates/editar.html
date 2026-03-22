@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Agendamento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Agendamento</h1>
+
+        {% if erro %}
+            <p class="erro">{{ erro }}</p>
+        {% endif %}
+
+        <form method="POST">
+            <label>Nome:</label>
+            <input type="text" name="nome" value="{{ agendamento[1] }}" required>
+
+            <label>Telefone:</label>
+            <input type="text" name="telefone" value="{{ agendamento[2] }}" required>
+
+            <label>Serviço:</label>
+            <select name="servico" required>
+                <option value="Clínico Geral" {% if agendamento[3] == 'Clínico Geral' %}selected{% endif %}>Clínico Geral</option>
+                <option value="Odontologia" {% if agendamento[3] == 'Odontologia' %}selected{% endif %}>Odontologia</option>
+                <option value="Psicologia" {% if agendamento[3] == 'Psicologia' %}selected{% endif %}>Psicologia</option>
+            </select>
+
+            <label>Data:</label>
+            <input type="date" name="data" value="{{ agendamento[4] }}" required>
+
+            <label>Horário:</label>
+            <input type="time" name="horario" value="{{ agendamento[5] }}" required>
+
+            <button type="submit">Salvar Alterações</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Agendar Consulta</h1>
+        {% if erro %}
+            <p class="erro">{{ erro }}</p>
+        {% endif %}
+
+        <form method="POST">
+            <label>Nome:</label>
+            <input type="text" name="nome" required>
+
+            <label>Telefone:</label>
+            <input type="tel" name="telefone" required placeholder="(99) 99999-9999">
+
+            <label>Serviço:</label>
+            <select name="servico" required>
+                <option value="">Selecione</option>
+                <option value="Clínico Geral">Clínico Geral e Prevemção</option>
+                <option value="Odontologia">Ortodontia</option>
+                <option value="Psicologia">Implantodontia e Protese</option>
+            </select>
+
+            <label>Data:</label>
+            <input type="date" name="data" required>
+
+            <label>Horário:</label>
+            <select name="horario" id="horario" required>
+                <option value="">Selecione um horário</option>
+            </select>
+
+            <label>Observações:</label>
+            <textarea name="obs" placeholder="Ex: queixas atuais"></textarea>
+
+            <button type="submit">Confirmar agendamento</button>
+        </form>
+    </div>
+    <script>
+const campoData = document.querySelector("input[name='data']");
+const selectHorario = document.getElementById("horario");
+
+function carregarHorarios() {
+    const data = campoData.value;
+
+    selectHorario.innerHTML = '<option value="">Selecione um horário</option>';
+
+    if (!data) {
+        return;
+    }
+
+    fetch(`/horarios?data=${data}`)
+        .then(response => response.json())
+        .then(horarios => {
+            selectHorario.innerHTML = '<option value="">Selecione um horário</option>';
+
+            if (horarios.length === 0) {
+                selectHorario.innerHTML += '<option value="">Sem horários disponíveis</option>';
+                return;
+            }
+
+            horarios.forEach(h => {
+                selectHorario.innerHTML += `<option value="${h}">${h}</option>`;
+            });
+        });
+}
+
+campoData.addEventListener("change", carregarHorarios);
+window.addEventListener("pageshow", carregarHorarios);
+</script>
+</script>
+</body>
+</html>
