@@ -54,6 +54,8 @@ def obter_limite_agendamentos_por_data(data_str):
     else:
         return 0
 
+
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -68,6 +70,12 @@ def init_db():
             horario TEXT NOT NULL
         )
     """)
+
+    cursor.execute("PRAGMA table_info(agendamentos)")
+    colunas = [col[1] for col in cursor.fetchall()]
+
+    if "status" not in colunas:
+        cursor.execute("ALTER TABLE agendamentos ADD COLUMN status TEXT DEFAULT 'Pendente'")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS bloqueios (
@@ -186,10 +194,10 @@ def admin():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, nome, telefone, servico, data, horario
-        FROM agendamentos
-        ORDER BY data, horario
-    """)
+    SELECT id, nome, telefone, servico, data, horario, status
+    FROM agendamentos
+    ORDER BY data, horario
+""")
     agendamentos = cursor.fetchall()
 
     cursor.execute("""
@@ -272,7 +280,27 @@ def editar(id):
 
         conn.commit()
         conn.close()
-        return redirect(url_for("admin"))
+
+        telefone_limpo = ''.join(filter(str.isdigit, telefone))
+
+        if not telefone_limpo.startswith("55"):
+            telefone_limpo = "55" + telefone_limpo
+
+        mensagem = f"""Olá, {nome}!
+
+Seu agendamento foi alterado.
+
+Novos dados:
+Serviço: {servico}
+Data: {data}
+Horário: {horario}
+
+Qualquer dúvida, estamos à disposição"""
+
+        mensagem_codificada = urllib.parse.quote(mensagem, safe='')
+        link_whatsapp = f"https://wa.me/{telefone_limpo}?text={mensagem_codificada}"
+
+        return redirect(link_whatsapp)
 
     cursor.execute("""
         SELECT id, nome, telefone, servico, data, horario
@@ -284,6 +312,7 @@ def editar(id):
     conn.close()
 
     return render_template("editar.html", agendamento=agendamento)
+
 @app.route("/logout")
 def logout():
     session.pop("admin_logado", None)
@@ -377,6 +406,53 @@ def desbloquear_data(id):
     conn.close()
 
     return redirect(url_for("admin"))
+
+@app.route("/confirmar/<int:id>")
+def confirmar(id):
+    if not session.get("admin_logado"):
+        return redirect(url_for("login"))
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT nome, telefone, data, horario
+        FROM agendamentos
+        WHERE id = ?
+    """, (id,))
+    agendamento = cursor.fetchone()
+
+    if not agendamento:
+        conn.close()
+        return redirect(url_for("admin"))
+
+    nome, telefone, data, horario = agendamento
+
+    cursor.execute("""
+        UPDATE agendamentos
+        SET status = 'Confirmado'
+        WHERE id = ?
+    """, (id,))
+    conn.commit()
+    conn.close()
+
+    telefone_limpo = ''.join(filter(str.isdigit, telefone))
+
+    if not telefone_limpo.startswith("55"):
+        telefone_limpo = "55" + telefone_limpo
+
+    mensagem = f"""Olá, {nome}!
+
+Seu atendimento foi confirmado para:
+Data: {data}
+Horário: {horario}
+
+Aguardamos você"""
+
+    mensagem_codificada = urllib.parse.quote(mensagem, safe='')
+    link_whatsapp = f"https://wa.me/{telefone_limpo}?text={mensagem_codificada}"
+
+    return redirect(link_whatsapp)
 
 if __name__ == "__main__":
     init_db()

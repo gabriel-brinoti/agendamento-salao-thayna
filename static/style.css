@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    background: #f4f7fb;
+    background:  #f9e0e6;
     margin: 0;
     padding: 0;
 }
@@ -9,7 +9,7 @@ body {
     width: 90%;
     max-width: 500px;
     margin: 60px auto;
-    background: white;
+    background: #d6a1a8;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -17,12 +17,12 @@ body {
 
 h1 {
     text-align: center;
-    color: #222;
+    color: black;
 }
 
 p {
     text-align: center;
-    color: #666;
+    color: black;
 }
 
 label {
@@ -36,13 +36,13 @@ input, select, button {
     padding: 12px;
     margin-top: 5px;
     border-radius: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid black;
     box-sizing: border-box;
 }
 
 button, .botao {
-    background: #25D366;
-    color: white;
+    background: #d8959c;
+    color: black;
     border: none;
     text-decoration: none;
     display: inline-block;
@@ -56,7 +56,7 @@ button, .botao {
     box-sizing: border-box;
 }
 button:hover, .botao:hover {
-    background: #1ebe5d;
+    background: #d8959c;
 }
 
 textarea {
@@ -64,7 +64,7 @@ textarea {
     padding: 12px;
     margin-top: 5px;
     border-radius: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid black;
     box-sizing: border-box;
     resize: none;
 }
@@ -92,20 +92,20 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    background: white;
+    background: #f9e0e6;
     border-radius: 10px;
     overflow: hidden;
 }
 
 th, td {
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid black;
     text-align: center;
 }
 
 th {
-    background: #25D366;
-    color: white;
+    background: #f9e0e6;
+    color: black;
 }
 
 tr:nth-child(even) {
@@ -128,7 +128,7 @@ tr:nth-child(even) {
     margin: 2px;
     border-radius: 6px;
     text-decoration: none;
-    color: white;
+    color: black;
     font-size: 14px;
 }
 
@@ -146,4 +146,12 @@ tr:nth-child(even) {
 
 .excluir:hover {
     background: #c82333;
+}
+
+.confirmar {
+    background: #28a745;
+}
+
+.confirmar:hover {
+    background: #218838;
 }
