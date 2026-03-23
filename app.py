@@ -1,21 +1,58 @@
 from flask import Flask, render_template, request, redirect, session, url_for, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 import urllib.parse
 import os
-from flask import jsonify
 
-LIMITE_AGENDAMENTOS_DIA = 8
 
-HORARIOS_DISPONIVEIS = [
-    "08:00", "09:00", "10:00", "11:00",
-    "13:00", "14:00", "15:00", "16:00", "17:00"
-]
 app = Flask(__name__)
 app.secret_key = "minha_chave_secreta_123"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
+
+def gerar_horarios(inicio, fim, intervalo_minutos=60):
+    horarios = []
+    hora_atual = datetime.strptime(inicio, "%H:%M")
+    hora_fim = datetime.strptime(fim, "%H:%M")
+
+    while hora_atual <= hora_fim:
+        horarios.append(hora_atual.strftime("%H:%M"))
+        hora_atual += timedelta(minutes=intervalo_minutos)
+
+    return horarios
+
+def obter_horarios_por_data(data_str):
+    data_obj = datetime.strptime(data_str, "%Y-%m-%d")
+    dia_semana = data_obj.weekday()
+
+    # Segunda a sexta = 0 a 4
+    if 0 <= dia_semana <= 4:
+        return gerar_horarios("17:00", "19:00", 30)
+
+    # Sábado = 5
+    elif dia_semana == 5:
+        return gerar_horarios("08:00", "17:00")
+
+    # Domingo = 6
+    else:
+        return []
+    
+def obter_limite_agendamentos_por_data(data_str):
+    data_obj = datetime.strptime(data_str, "%Y-%m-%d")
+    dia_semana = data_obj.weekday()
+
+    # Segunda a sexta
+    if 0 <= dia_semana <= 4:
+        return 5
+
+    # Sábado
+    elif dia_semana == 5:
+        return 10
+
+    # Domingo
+    else:
+        return 0
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -78,6 +115,14 @@ def agendamento():
         if data_obj.weekday() == 6:
             return render_template("agendamento.html", erro="Domingo não há atendimento.")
 
+        horarios_validos = obter_horarios_por_data(data)
+
+        if not horarios_validos:
+            return render_template("agendamento.html", erro="Não há atendimento nessa data.")
+
+        if horario not in horarios_validos:
+            return render_template("agendamento.html", erro="Esse horário não está disponível para essa data.")
+
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
@@ -91,7 +136,9 @@ def agendamento():
         cursor.execute("SELECT COUNT(*) FROM agendamentos WHERE data = ?", (data,))
         total_dia = cursor.fetchone()[0]
 
-        if total_dia >= LIMITE_AGENDAMENTOS_DIA:
+        limite_dia = obter_limite_agendamentos_por_data(data)
+
+        if total_dia >= limite_dia:
             conn.close()
             return render_template("agendamento.html", erro="Esse dia já atingiu o limite de agendamentos.")
 
@@ -123,7 +170,7 @@ def agendamento():
         """
 
         mensagem_codificada = urllib.parse.quote(mensagem, safe='')
-        numero_whatsapp = "5516982202029"
+        numero_whatsapp = "5516999621509"
         link_whatsapp = f"https://wa.me/{numero_whatsapp}?text={mensagem_codificada}"
 
         return redirect(link_whatsapp)
@@ -185,6 +232,24 @@ def editar(id):
         data = request.form["data"]
         horario = request.form["horario"]
 
+        horarios_validos = obter_horarios_por_data(data)
+
+        if not horarios_validos:
+            conn.close()
+            return render_template(
+                "editar.html",
+                agendamento=(id, nome, telefone, servico, data, horario),
+                erro="Não há atendimento nessa data."
+            )
+
+        if horario not in horarios_validos:
+            conn.close()
+            return render_template(
+                "editar.html",
+                agendamento=(id, nome, telefone, servico, data, horario),
+                erro="Esse horário não está disponível para essa data."
+            )
+
         cursor.execute("""
             SELECT id FROM agendamentos
             WHERE data = ? AND horario = ? AND id != ?
@@ -192,16 +257,10 @@ def editar(id):
         conflito = cursor.fetchone()
 
         if conflito:
-            cursor.execute("""
-                SELECT id, nome, telefone, servico, data, horario
-                FROM agendamentos
-                WHERE id = ?
-            """, (id,))
-            agendamento = cursor.fetchone()
             conn.close()
             return render_template(
                 "editar.html",
-                agendamento=agendamento,
+                agendamento=(id, nome, telefone, servico, data, horario),
                 erro="Esse horário já está ocupado por outro agendamento."
             )
 
@@ -225,7 +284,6 @@ def editar(id):
     conn.close()
 
     return render_template("editar.html", agendamento=agendamento)
-
 @app.route("/logout")
 def logout():
     session.pop("admin_logado", None)
@@ -259,7 +317,9 @@ def horarios():
     cursor.execute("SELECT COUNT(*) FROM agendamentos WHERE data = ?", (data,))
     total_dia = cursor.fetchone()[0]
 
-    if total_dia >= LIMITE_AGENDAMENTOS_DIA:
+    limite_dia = obter_limite_agendamentos_por_data(data)
+
+    if total_dia >= limite_dia:
         conn.close()
         return jsonify([])
 
@@ -269,9 +329,11 @@ def horarios():
 
     conn.close()
 
-    livres = [h for h in HORARIOS_DISPONIVEIS if h not in ocupados]
+    horarios_base = obter_horarios_por_data(data)
 
-    return jsonify(livres)
+    livres = [h for h in horarios_base if h not in ocupados]
+
+    return jsonify(livres)  
 
 @app.route("/bloquear-data", methods=["GET", "POST"])
 def bloquear_data():
