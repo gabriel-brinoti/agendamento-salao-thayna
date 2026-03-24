@@ -28,7 +28,7 @@ def obter_horarios_por_data(data_str):
 
     # Segunda a sexta = 0 a 4
     if 0 <= dia_semana <= 4:
-        return gerar_horarios("17:00", "19:00", 30)
+        return gerar_horarios("18:00", "19:00", 15)
 
     # Sábado = 5
     elif dia_semana == 5:
@@ -325,7 +325,7 @@ def horarios():
     if not data:
         return jsonify([])
 
-    data_obj = datetime.strptime(data, "%d/%m/%Y")
+    data_obj = datetime.strptime(data, "%Y-%m-%d")
 
     # Bloqueia domingos
     if data_obj.weekday() == 6:
