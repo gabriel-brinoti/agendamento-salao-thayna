@@ -41,7 +41,7 @@ input, select, button {
 }
 
 button, .botao {
-    background: #d8959c;
+    background: #c15963;
     color: black;
     border: none;
     text-decoration: none;
@@ -94,7 +94,7 @@ table {
     margin-top: 20px;
     background: #f9e0e6;
     border-radius: 10px;
-    overflow: hidden;
+    
 }
 
 th, td {
@@ -110,6 +110,18 @@ th {
 
 tr:nth-child(even) {
     background: #f9f9f9;
+}
+
+.tabela-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    th, td {
+        padding: 8px;
+        font-size: 14px;
+    }
 }
 
 .erro {
