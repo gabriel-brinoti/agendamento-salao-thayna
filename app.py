@@ -325,7 +325,7 @@ def horarios():
     if not data:
         return jsonify([])
 
-    data_obj = datetime.strptime(data, "%Y-%m-%d")
+    data_obj = datetime.strptime(data, "%d/%m/%Y")
 
     # Bloqueia domingos
     if data_obj.weekday() == 6:
