@@ -100,7 +100,7 @@ def login():
         usuario = request.form["usuario"]
         senha = request.form["senha"]
 
-        if usuario == "admin" and senha == "1234":
+        if usuario == "thay" and senha == "23032026":
             session["admin_logado"] = True
             return redirect(url_for("admin"))
         else:
