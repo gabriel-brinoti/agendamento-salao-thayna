@@ -17,39 +17,42 @@
             <div class="tabela-responsive">
                 <table>
                     <thead>
-                        <tr>
-                            <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Telefone</th>
-                            <th>Serviço</th>
-                            <th>Data</th>
-                            <th>Horário</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for agendamento in agendamentos %}
-                        <tr>
-                            <td>{{ agendamento[0] }}</td>
-                            <td>{{ agendamento[1] }}</td>
-                            <td>{{ agendamento[2] }}</td>
-                            <td>{{ agendamento[3] }}</td>
-                            <td>{{ agendamento[4] }}</td>
-                            <td>{{ agendamento[5] }}</td>
-                            <td>{{ agendamento[6] }}</td>
-                            <td>
-                                {% if agendamento[6] != 'Confirmado' %}
-                                    <a href="{{ url_for('confirmar', id=agendamento[0]) }}" class="acao confirmar">Confirmar</a>
-                                {% endif %}
-                                <a href="{{ url_for('editar', id=agendamento[0]) }}" class="acao editar">Editar</a>
-                                <a href="{{ url_for('excluir', id=agendamento[0]) }}" class="acao excluir" onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">Excluir</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Telefone</th>
+        <th>Serviço</th>
+        <th>Data</th>
+        <th>Horário</th>
+        <th>Status</th>
+        <th>Ações</th>
+    </tr>
+</thead>
+<tbody>
+    {% for agendamento in agendamentos %}
+    <tr>
+        <td>{{ agendamento[0] }}</td>
+        <td>{{ agendamento[1] }}</td>
+        <td>{{ agendamento[2] }}</td>
+        <td>{{ agendamento[3] }}</td>
+        <td>{{ agendamento[4] }}</td>
+        <td>{{ agendamento[5] }}</td>
+        <td>{{ agendamento[6] }}</td>
+        <td>
+            {% if agendamento[6] != 'Confirmado' %}
+                <a href="{{ url_for('confirmar', id=agendamento[0]) }}" class="acao confirmar">Confirmar</a>
+            {% endif %}
+
+            {% if agendamento[6] == 'Remarcação pendente' %}
+                <a href="{{ url_for('avisar_remarcacao', id=agendamento[0]) }}" class="acao confirmar">Avisar</a>
+            {% endif %}
+
+            <a href="{{ url_for('editar', id=agendamento[0]) }}" class="acao editar">Editar</a>
+            <a href="{{ url_for('excluir', id=agendamento[0]) }}" class="acao excluir" onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">Excluir</a>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
                 </table>
             </div>
         {% else %}

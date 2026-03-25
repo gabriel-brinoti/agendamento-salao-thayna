@@ -16,8 +16,10 @@ body {
 }
 
 h1 {
+    font-family: "Titillium Web", sans-serif;
     text-align: center;
     color: black;
+    
 }
 
 p {
@@ -166,4 +168,9 @@ tr:nth-child(even) {
 
 .confirmar:hover {
     background: #218838;
+}
+
+.status-remarcacao {
+    color: #b26a00;
+    font-weight: bold;
 }

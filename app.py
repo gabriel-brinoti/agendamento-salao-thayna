@@ -28,11 +28,11 @@ def obter_horarios_por_data(data_str):
 
     # Segunda a sexta = 0 a 4
     if 0 <= dia_semana <= 4:
-        return gerar_horarios("18:00", "19:00", 15)
+        return gerar_horarios("18:30", "19:50", 40)
 
     # Sábado = 5
     elif dia_semana == 5:
-        return gerar_horarios("08:00", "17:00")
+        return gerar_horarios("08:00", "17:00", 40)
 
     # Domingo = 6
     else:
@@ -383,7 +383,16 @@ def bloquear_data():
                 "INSERT INTO bloqueios (data, motivo) VALUES (?, ?)",
                 (data, motivo)
             )
+
+            # marca os agendamentos desse dia como remarcacao pendente
+            cursor.execute("""
+                UPDATE agendamentos
+                SET status = 'Remarcação pendente'
+                WHERE data = ?
+            """, (data,))
+
             conn.commit()
+
         except sqlite3.IntegrityError:
             erro = "Essa data já está bloqueada."
 
@@ -448,6 +457,49 @@ Data: {data}
 Horário: {horario}
 
 Aguardamos você"""
+
+    mensagem_codificada = urllib.parse.quote(mensagem, safe='')
+    link_whatsapp = f"https://wa.me/{telefone_limpo}?text={mensagem_codificada}"
+
+    return redirect(link_whatsapp)
+
+@app.route("/avisar-remarcacao/<int:id>")
+def avisar_remarcacao(id):
+    if not session.get("admin_logado"):
+        return redirect(url_for("login"))
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT nome, telefone, servico, data, horario
+        FROM agendamentos
+        WHERE id = ?
+    """, (id,))
+    agendamento = cursor.fetchone()
+
+    conn.close()
+
+    if not agendamento:
+        return redirect(url_for("admin"))
+
+    nome, telefone, servico, data, horario = agendamento
+
+    telefone_limpo = ''.join(filter(str.isdigit, telefone))
+    if not telefone_limpo.startswith("55"):
+        telefone_limpo = "55" + telefone_limpo
+
+    mensagem = f"""Olá, {nome}!
+
+Tivemos uma alteração na agenda e seu atendimento precisará ser remarcado.
+
+Agendamento afetado:
+Serviço: {servico}
+Data: {data}
+Horário: {horario}
+
+Você terá prioridade para escolher um novo horário.
+Me chama aqui que organizamos sua remarcação"""
 
     mensagem_codificada = urllib.parse.quote(mensagem, safe='')
     link_whatsapp = f"https://wa.me/{telefone_limpo}?text={mensagem_codificada}"
