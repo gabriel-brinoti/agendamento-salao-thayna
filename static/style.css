@@ -17,11 +17,11 @@ body {
 
 h1 {
     font-family: "Titillium Web", sans-serif;
-    text-align: center;
+  font-weight: 850;
+  font-style: italic;
+  text-align: center;
     color: black;
-    
 }
-
 p {
     text-align: center;
     color: black;
