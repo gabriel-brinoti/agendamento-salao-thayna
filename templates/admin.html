@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Cursive:wght@400..700&family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Cursive:wght@400..700&family=Momo+Signature&family=Playwrite+DK+Uloopet+Guides&family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">
     <title>Painel Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -14,7 +14,7 @@
         <h1>Painel de Agendamentos</h1>
 
         <a href="{{ url_for('bloquear_data') }}" class="botao" style="margin-bottom: 15px;">Bloquear Data</a>
-        <a href="{{ url_for('logout') }}" class="botao" style="background: #c15963; margin-bottom: 20px;">Sair</a>
+        <a href="{{ url_for('logout') }}" class="botao" style="background: #e3a076; margin-bottom: 20px;">Sair</a>
 
         {% if agendamentos %}
             <div class="tabela-responsive">

@@ -6,6 +6,9 @@ import os
 
 
 app = Flask(__name__)
+Endereco = "R. Amauri Odimar Mercuri, 1615 - Parque Vicente Leporace |" \
+"Franca - SP"
+
 app.secret_key = "minha_chave_secreta_123"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,11 +31,11 @@ def obter_horarios_por_data(data_str):
 
     # Segunda a sexta = 0 a 4
     if 0 <= dia_semana <= 4:
-        return gerar_horarios("18:30", "19:50", 40)
+        return gerar_horarios("08:00", "20:00", 40)
 
     # Sábado = 5
     elif dia_semana == 5:
-        return gerar_horarios("08:00", "17:00", 40)
+        return gerar_horarios("08:00", "20:00", 40)
 
     # Domingo = 6
     else:
@@ -44,7 +47,7 @@ def obter_limite_agendamentos_por_data(data_str):
 
     # Segunda a sexta
     if 0 <= dia_semana <= 4:
-        return 5
+        return 10
 
     # Sábado
     elif dia_semana == 5:
@@ -100,7 +103,7 @@ def login():
         usuario = request.form["usuario"]
         senha = request.form["senha"]
 
-        if usuario == "thay" and senha == "23032026":
+        if usuario == "admin" and senha == "1234":
             session["admin_logado"] = True
             return redirect(url_for("admin"))
         else:
@@ -112,6 +115,7 @@ def login():
 def agendamento():
     if request.method == "POST":
         nome = request.form["nome"]
+        sobrenome = request.form["sobrenome"]
         telefone = request.form["telefone"]
         servico = request.form["servico"]
         data = request.form["data"]
@@ -169,7 +173,7 @@ def agendamento():
 
         mensagem = f"""*NOVO AGENDAMENTO*
 
-        Nome: {nome}
+        Nome: {nome} {sobrenome}
         Telefone: {telefone}
         Serviço: {servico}
         Data: {data}
@@ -178,7 +182,7 @@ def agendamento():
         """
 
         mensagem_codificada = urllib.parse.quote(mensagem, safe='')
-        numero_whatsapp = "5516999621509"
+        numero_whatsapp = "5516993803175"
         link_whatsapp = f"https://wa.me/{numero_whatsapp}?text={mensagem_codificada}"
 
         return redirect(link_whatsapp)
@@ -456,6 +460,10 @@ Seu atendimento foi confirmado para:
 Data: {data}
 Horário: {horario}
 
+Endereço:
+{Endereco}
+
+Qualquer dúvida estamos à disposição.
 Aguardamos você"""
 
     mensagem_codificada = urllib.parse.quote(mensagem, safe='')
@@ -509,4 +517,4 @@ Me chama aqui que organizamos sua remarcação"""
 if __name__ == "__main__":
     init_db()
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
