@@ -9,7 +9,7 @@ app = Flask(__name__)
 Endereco = "R. Amauri Odimar Mercuri, 1615 - Parque Vicente Leporace |" \
 "Franca - SP"
 
-app.secret_key = "minha_chave_secreta_123"
+app.secret_key = os.environ.get("SECRET_KEY", "chave_segura_123")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -31,11 +31,11 @@ def obter_horarios_por_data(data_str):
 
     # Segunda a sexta = 0 a 4
     if 0 <= dia_semana <= 4:
-        return gerar_horarios("08:00", "20:00", 40)
+        return gerar_horarios("18:30", "20:00", 40)
 
     # Sábado = 5
     elif dia_semana == 5:
-        return gerar_horarios("08:00", "20:00", 40)
+        return gerar_horarios("08:00", "17:00", 40)
 
     # Domingo = 6
     else:
@@ -47,7 +47,7 @@ def obter_limite_agendamentos_por_data(data_str):
 
     # Segunda a sexta
     if 0 <= dia_semana <= 4:
-        return 10
+        return 5
 
     # Sábado
     elif dia_semana == 5:
@@ -67,19 +67,27 @@ def init_db():
         CREATE TABLE IF NOT EXISTS agendamentos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
+            sobrenome TEXT NOT NULL,
             telefone TEXT NOT NULL,
             servico TEXT NOT NULL,
             data TEXT NOT NULL,
-            horario TEXT NOT NULL
+            horario TEXT NOT NULL,
+            obs TEXT,
+            status TEXT DEFAULT 'Pendente'
         )
     """)
 
     cursor.execute("PRAGMA table_info(agendamentos)")
     colunas = [col[1] for col in cursor.fetchall()]
 
+    if "sobrenome" not in colunas:
+        cursor.execute("ALTER TABLE agendamentos ADD COLUMN sobrenome TEXT DEFAULT ''")
+
+    if "obs" not in colunas:
+        cursor.execute("ALTER TABLE agendamentos ADD COLUMN obs TEXT DEFAULT ''")
+
     if "status" not in colunas:
         cursor.execute("ALTER TABLE agendamentos ADD COLUMN status TEXT DEFAULT 'Pendente'")
-
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS bloqueios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,7 +111,7 @@ def login():
         usuario = request.form["usuario"]
         senha = request.form["senha"]
 
-        if usuario == "admin" and senha == "1234":
+        if usuario == "admin" and senha == "412004":
             session["admin_logado"] = True
             return redirect(url_for("admin"))
         else:
@@ -134,17 +142,15 @@ def agendamento():
 
         if horario not in horarios_validos:
             return render_template("agendamento.html", erro="Esse horário não está disponível para essa data.")
-
+        
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-
         cursor.execute("SELECT id FROM bloqueios WHERE data = ?", (data,))
         bloqueado = cursor.fetchone()
-
         if bloqueado:
             conn.close()
             return render_template("agendamento.html", erro="Essa data está bloqueada para atendimento.")
-
+        
         cursor.execute("SELECT COUNT(*) FROM agendamentos WHERE data = ?", (data,))
         total_dia = cursor.fetchone()[0]
 
@@ -165,9 +171,9 @@ def agendamento():
             return render_template("agendamento.html", erro="Este horário já está ocupado. Escolha outro.")
 
         cursor.execute("""
-            INSERT INTO agendamentos (nome, telefone, servico, data, horario)
-            VALUES (?, ?, ?, ?, ?)
-        """, (nome, telefone, servico, data, horario))
+            INSERT INTO agendamentos (nome, sobrenome, telefone, servico, data, horario, obs)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (nome, sobrenome, telefone, servico, data, horario, obs))
         conn.commit()
         conn.close()
 
@@ -179,6 +185,8 @@ def agendamento():
         Data: {data}
         Horário: {horario}
         Observação: {obs if obs else "Nenhuma"}
+        Aguarde, em breve confirmaremos seu agendamento.
+        Obrigado pelo contato!
         """
 
         mensagem_codificada = urllib.parse.quote(mensagem, safe='')
@@ -198,7 +206,7 @@ def admin():
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT id, nome, telefone, servico, data, horario, status
+    SELECT id, nome, sobrenome, telefone, servico, data, horario, status
     FROM agendamentos
     ORDER BY data, horario
 """)
@@ -250,7 +258,7 @@ def editar(id):
             conn.close()
             return render_template(
                 "editar.html",
-                agendamento=(id, nome, telefone, servico, data, horario),
+                agendamento=(id, nome, "", telefone, servico, data, horario, "Pendente"),
                 erro="Não há atendimento nessa data."
             )
 
@@ -258,8 +266,31 @@ def editar(id):
             conn.close()
             return render_template(
                 "editar.html",
-                agendamento=(id, nome, telefone, servico, data, horario),
+                agendamento=(id, nome, "", telefone, servico, data, horario, "Pendente"),
                 erro="Esse horário não está disponível para essa data."
+            )
+        cursor.execute("SELECT id FROM bloqueios WHERE data = ?", (data,))
+        bloqueado = cursor.fetchone()
+
+        if bloqueado:
+            conn.close()
+            return render_template(
+            "editar.html",
+            agendamento=(id, nome, "", telefone, servico, data, horario, "Pendente"),
+            erro="Essa data está bloqueada para atendimento."
+        )
+
+        cursor.execute("SELECT COUNT(*) FROM agendamentos WHERE data = ? AND id != ?", (data, id))
+        total_dia = cursor.fetchone()[0]
+
+        limite_dia = obter_limite_agendamentos_por_data(data)
+
+        if total_dia >= limite_dia:
+            conn.close()
+            return render_template(
+                "editar.html",
+                agendamento=(id, nome, "", telefone, servico, data, horario, "Pendente"),
+                erro="Esse dia já atingiu o limite de agendamentos."
             )
 
         cursor.execute("""
@@ -272,7 +303,7 @@ def editar(id):
             conn.close()
             return render_template(
                 "editar.html",
-                agendamento=(id, nome, telefone, servico, data, horario),
+                agendamento=(id, nome, "", telefone, servico, data, horario, "Pendente"),
                 erro="Esse horário já está ocupado por outro agendamento."
             )
 
@@ -307,7 +338,7 @@ Qualquer dúvida, estamos à disposição"""
         return redirect(link_whatsapp)
 
     cursor.execute("""
-        SELECT id, nome, telefone, servico, data, horario
+        SELECT id, nome, sobrenome, telefone, servico, data, horario, status
         FROM agendamentos
         WHERE id = ?
     """, (id,))
@@ -517,4 +548,4 @@ Me chama aqui que organizamos sua remarcação"""
 if __name__ == "__main__":
     init_db()
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=False)

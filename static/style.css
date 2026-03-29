@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    background:  #f3e2d8;
+    background:  #f9e0e6;
     margin: 0;
     padding: 0;
 }
@@ -9,14 +9,21 @@ body {
     width: 90%;
     max-width: 500px;
     margin: 60px auto;
-    background: #f1c3a2;
+    background: #d8959c;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 h1 {
-    font-family: 'Momo Signature', cursive;
+    font-family: "Titillium Web", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+  text-align: center;
+    color: black;
+}
+h2{
+    font-family: "Titillium Web", sans-serif;
   font-weight: 400;
   font-style: italic;
   text-align: center;
@@ -43,7 +50,7 @@ input, select, button {
 }
 
 button, .botao {
-    background: #e3a076;
+    background: #f9e0e6;
     color: black;
     border: none;
     text-decoration: none;
@@ -58,7 +65,7 @@ button, .botao {
     box-sizing: border-box;
 }
 button:hover, .botao:hover {
-    background: #e3a076;
+    background: #f9e0e6;
 }
 
 textarea {
@@ -94,7 +101,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    background: #e3a076;
+    background: #f9e0e6;
     border-radius: 10px;
     
 }
@@ -106,12 +113,12 @@ th, td {
 }
 
 th {
-    background: #e3a076;
+    background: #f9e0e6;
     color: black;
 }
 
 tr:nth-child(even) {
-    background: #e3a076;
+    background: #f9e0e6;
 }
 
 .tabela-responsive {
@@ -127,7 +134,7 @@ tr:nth-child(even) {
 }
 
 .erro {
-    background: #e3a076;
+    background: #f9e0e6;
     color: #cc0000;
     padding: 10px;
     border-radius: 6px;

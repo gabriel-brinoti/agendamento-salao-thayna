@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Cursive:wght@400..700&family=Momo+Signature&family=Playwrite+DK+Uloopet+Guides&family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Cursive:wght@400..700&family=Momo+Signature&family=Playwrite+DK+Uloopet+Guides&family=Roboto:ital,wght@0,100..900;1,100..900&family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap" rel="stylesheet">
     <title>Editar Agendamento</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -22,48 +22,51 @@
             <input type="text" name="nome" value="{{ agendamento[1] }}" required>
 
             <label>Telefone:</label>
-            <input type="text" name="telefone" value="{{ agendamento[2] }}" required>
+            <input type="text" name="telefone" value="{{ agendamento[3] }}" required>
 
             <label>Serviço:</label>
             <select name="servico" required>
     <option value="">Selecione</option>
 
-    <option value="">Selecione</option>
-
-    <option value="Corte">
-        Corte - R$ 50,00
+    <option value="Designer" {% if agendamento[4] == 'Designer' %}selected{% endif %}>
+        Designer - R$ 40,00
     </option>
 
-    <option value="Escova">
-        Escova - R$ 70,00
+    <option value="Maquiagem completa" {% if agendamento[4] == 'Maquiagem completa' %}selected{% endif %}>
+        Maquiagem completa - R$ 130,00 
     </option>
 
-    <option value="Penteados">
-        Penteados - R$ 150,00
+    <option value="Depilação de rosto" {% if agendamento[4] == 'Depilação de rosto' %}selected{% endif %}>
+        Depilação de rosto - R$ 30,00
     </option>
 
-    <option value="Hidratação">
-        Hidratação - R$ 130,00
+    <option value="Depilação de buço" {% if agendamento[4] == 'Depilação de buço' %}selected{% endif %}>
+        Depilação de buço - R$ 10,00
     </option>
 
-    <option value="Cronograma Capilar">
-        Cronograma Capilar - R$ 550,00
+    <option value="Designer com Henna" {% if agendamento[4] == 'Designer com Henna' %}selected{% endif %}>
+        Designer com Henna - R$ 50,00
     </option>
 
-    <option value="Progressivas a Partir de">
-        Progressivas a Partir de  - R 150,00
+    <option value="Pacote semanal" {% if agendamento[4] == 'Pacote semanal' %}selected{% endif %}>
+        Pacote semanal - R$ 140,00
     </option>
 
-    <option value="Botox">
-        Botox - R$ 100,00
+    <option value="Pacote semanal com Henna" {% if agendamento[4] == 'Pacote semanal com Henna' %}selected{% endif %}>
+        Pacote semanal com Henna - R$ 180,00
     </option>
+
+    <option value="Maquiagem sem cílios postiços" {% if agendamento[4] == 'Maquiagem sem cílios postiços' %}selected{% endif %}>
+        Maquiagem sem cílios postiços - R$ 110,00
+    </option>
+
 </select>
 
             <label>Data:</label>
-            <input type="date" name="data" value="{{ agendamento[4] }}" required>
+            <input type="date" name="data" value="{{ agendamento[5] }}" required>
 
             <label>Horário:</label>
-            <input type="time" name="horario" value="{{ agendamento[5] }}" required>
+            <input type="time" name="horario" value="{{ agendamento[6] }}" required>
 
             <button type="submit">Salvar Alterações</button>
         </form>
