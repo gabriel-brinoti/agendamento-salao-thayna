@@ -190,7 +190,7 @@ def agendamento():
         """
 
         mensagem_codificada = urllib.parse.quote(mensagem, safe='')
-        numero_whatsapp = "5516993803175"
+        numero_whatsapp = "5516999621509"
         link_whatsapp = f"https://wa.me/{numero_whatsapp}?text={mensagem_codificada}"
 
         return redirect(link_whatsapp)
